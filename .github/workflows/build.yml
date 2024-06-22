@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    env:
+      VERSION: '1.0.0'
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12'
+
+    - name: Install 7zip
+      run: |
+        choco install 7zip -y
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium==4.9.1
+        pip install pyinstaller
+
+    - name: Build executable
+      run: pyinstaller -F main.py
+
+    - name: Create ZIP file
+      run: |
+        mkdir DamaiHelper_Build
+        cp dist/main.exe DamaiHelper_Build/DamaiHelper.exe
+        cp config.json DamaiHelper_Build/config.json
+        7z a DamaiHelper_V${{ env.VERSION }}_Windows.zip DamaiHelper_Build
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+      with:
+        tag_name: v${{ env.VERSION }}
+        release_name: DamaiHelper v${{ env.VERSION }} Release
+        body: |
+          总有些小笨蛋运行不起来，所以有了它...
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: DamaiHelper_V${{ env.VERSION }}_Windows.zip
+        asset_name: DamaiHelper_V${{ env.VERSION }}_Windows.zip
+        asset_content_type: application/zip
