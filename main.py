@@ -121,6 +121,35 @@ class Concert(object):
 
     # 实现购买函数
 
+    # 点击【立即购买】的时候处理弹框
+    def handle_health_info(self):
+        # 检查并处理温馨提示遮罩
+        try:
+            health_info = WebDriverWait(self.driver, 1, 0.1).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'health-info-content'))
+            )
+            print("---检测到温馨提示遮罩---")
+            health_info_box = health_info.find_element(by=By.ID, value='health-info-html-box')
+            # health_info_button = health_info.find_element(by=By.CSS_SELECTOR,value='.health-info-button')
+            # 模拟向上滑动，阅读温馨提示内容
+            print("---正在模拟向上滑动阅读温馨提示内容---")
+            self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight",health_info_box)
+            # self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", health_info_box)
+            # dr = health_info_box.find_elements_by_xpath("")
+            # self.driver.execute_script("var q=document.getElementById('health-info-html-box').scrollTop=10000")
+            # self.driver.execute_script("arguments[0].scrollIntoView();", health_info_box)
+            sleep(0.5)  # 等待滑动完成
+            print("---模拟滑动完成---")
+            # 点击“知道了”按钮
+            print("---正在点击“知道了”按钮---")
+            know_button = health_info.find_element(by=By.CSS_SELECTOR, value='.health-info-button')
+            know_button.click()
+            print("---“知道了”按钮点击成功---")
+        except TimeoutException:
+            print("---不存在温馨提示遮罩---")
+        except NoSuchElementException as e:
+            print(f"***Error: 温馨提示遮罩操作异常：{e}***")
+
     def choose_ticket(self):
         print("###进入抢票界面###")
         # 如果跳转到了确认界面就算这步成功了，否则继续执行此步
@@ -147,26 +176,28 @@ class Concert(object):
                 raise Exception(u"***Error: 页面中ID为root的整体布局元素不存在或加载超时***")
 
             # 检查并处理温馨提示遮罩
-            try:
-                health_info = WebDriverWait(self.driver, 1, 0.1).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, 'health-info-content'))
-                )
-                print("---检测到温馨提示遮罩---")
-                health_info_box = health_info.find_element(by=By.ID, value='health-info-html-box')
-                # 模拟向上滑动，阅读温馨提示内容
-                print("---正在模拟向上滑动阅读温馨提示内容---")
-                self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", health_info_box)
-                sleep(0.5)  # 等待滑动完成
-                print("---模拟滑动完成---")
-                # 点击“知道了”按钮
-                print("---正在点击“知道了”按钮---")
-                know_button = health_info.find_element(by=By.CLASS_NAME, value='button')
-                know_button.click()
-                print("---“知道了”按钮点击成功---")
-            except TimeoutException:
-                print("---不存在温馨提示遮罩---")
-            except NoSuchElementException as e:
-                print(f"***Error: 温馨提示遮罩操作异常：{e}***")
+            self.handle_health_info()
+            # try:
+            #     health_info = WebDriverWait(self.driver, 1, 0.1).until(
+            #         EC.presence_of_element_located((By.CLASS_NAME, 'health-info-content'))
+            #     )
+            #     print("---检测到温馨提示遮罩---")
+            #     health_info_box = health_info.find_element(by=By.ID, value='health-info-html-box')
+            #     # 模拟向上滑动，阅读温馨提示内容
+            #     print("---正在模拟向上滑动阅读温馨提示内容---")
+            #     # self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", health_info_box)
+            #     self.driver.execute_script("arguments[0].scrollIntoView();", health_info_box)
+            #     sleep(1)  # 等待滑动完成
+            #     print("---模拟滑动完成---")
+            #     # 点击“知道了”按钮
+            #     print("---正在点击“知道了”按钮---")
+            #     know_button = health_info.find_element(by=By.CLASS_NAME, value='button')
+            #     know_button.click()
+            #     print("---“知道了”按钮点击成功---")
+            # except TimeoutException:
+            #     print("---不存在温馨提示遮罩---")
+            # except NoSuchElementException as e:
+            #     print(f"***Error: 温馨提示遮罩操作异常：{e}***")
 
             # 检查并处理实名制观演提示遮罩
             try:
@@ -185,7 +216,7 @@ class Concert(object):
                 print(f"***Error: 实名制观演提示遮罩操作异常：{e}***")
 
             try:
-                buybutton = box.find_element(by=By.CLASS_NAME, value='buy__button')
+                buybutton = box.find_element(by=By.CSS_SELECTOR, value='.buy-button')
                 buybutton_text = buybutton.text
                 print("---定位购买按钮成功---")
             except Exception as e:
@@ -199,9 +230,14 @@ class Concert(object):
                 raise Exception("---已经缺货，刷新等待---")
 
             sleep(0.1)
+            self.handle_health_info()
             buybutton.click()
             print("---点击购买按钮---")
+
+            sleep(0.1)
+            self.handle_health_info()
             box = WebDriverWait(self.driver, 1, 0.1).until(
+                # EC.presence_of_element_located((By.LINK_TEXT, '立即购买')))
                 EC.presence_of_element_located((By.CSS_SELECTOR, '.sku-pop-wrapper')))
 
             try:
