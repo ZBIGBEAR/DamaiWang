@@ -35,6 +35,11 @@ git clone
 python main.py
 ```
 
+#### 交流
+作者在网站：https://www.zjxlyp.com/2024/06/22/60421.html 记录了部署过程中遇到的问题，可以参考。
+
+欢迎在评论区沟通交流。微信：zjx31415926535879
+
 ## 鸣谢
 原作者：
 - Guyungy https://github.com/Guyungy/damaihelper 提供的脚本基础逻辑！
