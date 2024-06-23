@@ -133,11 +133,7 @@ class Concert(object):
             # health_info_button = health_info.find_element(by=By.CSS_SELECTOR,value='.health-info-button')
             # 模拟向上滑动，阅读温馨提示内容
             print("---正在模拟向上滑动阅读温馨提示内容---")
-            self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight",health_info_box)
-            # self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", health_info_box)
-            # dr = health_info_box.find_elements_by_xpath("")
-            # self.driver.execute_script("var q=document.getElementById('health-info-html-box').scrollTop=10000")
-            # self.driver.execute_script("arguments[0].scrollIntoView();", health_info_box)
+            self.driver.execute_script("arguments[0].scrollIntoView(false);", health_info_box);
             sleep(0.5)  # 等待滑动完成
             print("---模拟滑动完成---")
             # 点击“知道了”按钮
@@ -177,27 +173,6 @@ class Concert(object):
 
             # 检查并处理温馨提示遮罩
             self.handle_health_info()
-            # try:
-            #     health_info = WebDriverWait(self.driver, 1, 0.1).until(
-            #         EC.presence_of_element_located((By.CLASS_NAME, 'health-info-content'))
-            #     )
-            #     print("---检测到温馨提示遮罩---")
-            #     health_info_box = health_info.find_element(by=By.ID, value='health-info-html-box')
-            #     # 模拟向上滑动，阅读温馨提示内容
-            #     print("---正在模拟向上滑动阅读温馨提示内容---")
-            #     # self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", health_info_box)
-            #     self.driver.execute_script("arguments[0].scrollIntoView();", health_info_box)
-            #     sleep(1)  # 等待滑动完成
-            #     print("---模拟滑动完成---")
-            #     # 点击“知道了”按钮
-            #     print("---正在点击“知道了”按钮---")
-            #     know_button = health_info.find_element(by=By.CLASS_NAME, value='button')
-            #     know_button.click()
-            #     print("---“知道了”按钮点击成功---")
-            # except TimeoutException:
-            #     print("---不存在温馨提示遮罩---")
-            # except NoSuchElementException as e:
-            #     print(f"***Error: 温馨提示遮罩操作异常：{e}***")
 
             # 检查并处理实名制观演提示遮罩
             try:
@@ -383,32 +358,35 @@ class Concert(object):
 
             while True:
                 try:
-                    WebDriverWait(self.driver, 5, 0.1).until(
+                    WebDriverWait(self.driver, 10, 0.1).until(
                         EC.title_contains('支付宝'))
                     print("###订单提交成功###")
                     self.status = 6
                     self.time_end = time()
                     break
-                except:
+                except Exception as e:
+                    print(f"***Error: 跳转支付宝报错***: {e}")
+                    print("尝试重新抢票")
+                    return True
                     # 通过人工判断订单提交状态
-                    step = input(
-                        "\n###\n1.成功跳转到支付宝付款页面\n2.未知，没跳转到支付宝界面，尝试重新抢票\n3.未知，退出脚本\n###\n请输入当前状态：")
-                    if step == '1':
-                        # 成功
-                        print("订单提交成功")
-                        self.status = 6
-                        self.time_end = time()
-                        break
-                    elif step == '2':
-                        # 失败，进入下一轮抢票
-                        print("尝试重新抢票")
-                        return True
-                    elif step == '3':
-                        # 退出脚本
-                        print("脚本退出成功")
-                        return False
-                    else:
-                        raise Exception(u'***Error: 未知输入***')
+                    # step = input(
+                    #     "\n###\n1.成功跳转到支付宝付款页面\n2.未知，没跳转到支付宝界面，尝试重新抢票\n3.未知，退出脚本\n###\n请输入当前状态：")
+                    # if step == '1':
+                    #     # 成功
+                    #     print("订单提交成功")
+                    #     self.status = 6
+                    #     self.time_end = time()
+                    #     break
+                    # elif step == '2':
+                    #     # 失败，进入下一轮抢票
+                    #     print("尝试重新抢票")
+                    #     return True
+                    # elif step == '3':
+                    #     # 退出脚本
+                    #     print("脚本退出成功")
+                    #     return False
+                    # else:
+                    #     raise Exception(u'***Error: 未知输入***')
 
 
 if __name__ == '__main__':
