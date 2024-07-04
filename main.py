@@ -195,7 +195,12 @@ class Concert(object):
                 buybutton_text = buybutton.text
                 print("---定位购买按钮成功---")
             except Exception as e:
-                raise Exception(f"***Error: 定位购买按钮失败***: {e}")
+                try:
+                    buybutton = box.find_element(by=By.CSS_SELECTOR, value='.buy__button')
+                    buybutton_text = buybutton.text
+                    print("---定位购买按钮成功---")
+                except Exception as e:
+                    raise Exception(f"***Error: 定位购买按钮失败***: {e}")
 
             if "即将开抢" in buybutton_text:
                 self.status = 2
@@ -329,24 +334,27 @@ class Concert(object):
             else:
                 raise Exception(f"未定义按钮：{buybutton_text}")
 
-    def check_order(self):
+    def check_order(self, retry=False):
         if self.status in [3, 4, 5]:
-            # 选择观影人
-            toBeClicks = []
-            WebDriverWait(self.driver, 5, 0.1).until(
-                EC.presence_of_element_located((By.XPATH, '//*[@id="dmViewerBlock_DmViewerBlock"]/div[2]/div/div')))
-            people = self.driver.find_elements(
-                By.XPATH, '//*[@id="dmViewerBlock_DmViewerBlock"]/div[2]/div/div')
-            sleep(0.2)
+            time_to_wait = 0.5 # 如果是重试的话，不需要等待太久
+            if not retry: # 重试的时候不需要再次选择
+                time_to_wait = 5 # 如果不是重试的话，等待时间长一点
+                # 选择观影人
+                toBeClicks = []
+                WebDriverWait(self.driver, time_to_wait, 0.1).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="dmViewerBlock_DmViewerBlock"]/div[2]/div/div')))
+                people = self.driver.find_elements(
+                    By.XPATH, '//*[@id="dmViewerBlock_DmViewerBlock"]/div[2]/div/div')
+                sleep(0.2)
 
-            for i in self.viewer_person:
-                if i > len(people):
-                    break
-                j = people[i - 1]
-                j.click()
-                sleep(0.05)
+                for i in self.viewer_person:
+                    if i > len(people):
+                        break
+                    j = people[i - 1]
+                    j.click()
+                    sleep(0.05)
 
-            WebDriverWait(self.driver, 5, 0.1).until(
+            WebDriverWait(self.driver, time_to_wait, 0.1).until(
                 EC.presence_of_element_located(
                     (By.XPATH, '//*[@id="dmOrderSubmitBlock_DmOrderSubmitBlock"]/div[2]/div/div[2]/div[2]/div[2]')))
             comfirmBtn = self.driver.find_element(
@@ -402,12 +410,18 @@ if __name__ == '__main__':
         print(e)
         exit(1)
 
+    retry_times = 0
+
     while True:
         try:
+            if retry_times > 50: # 重试次数超过50次重新刷新页面，否则大麦会提示“在此页面停留时间过长”错误
+                retry_times = 0
+                con.enter_concert()
             con.choose_ticket()
-            retry = con.check_order()
+            retry = con.check_order(retry_times > 0)
             if not retry:
                 break
+            retry_times += 1
         except Exception as e:
             con.driver.get(con.target_url)
             print(e)
